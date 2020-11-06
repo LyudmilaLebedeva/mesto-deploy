@@ -8,8 +8,8 @@ const card = require('./card');
 
 const NotFoundError = require('../errors/NotFounError');
 
-router.use(signup);
-router.use(signin);
+router.use('/signup', signup);
+router.use('/signin', signin);
 router.use(auth);
 router.use('/cards', card);
 router.use('/users', user);

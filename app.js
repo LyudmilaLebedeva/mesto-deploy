@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 
-const router = require('./routes');
+const routes = require('./routes');
 const errorHandeler = require('./middlewares/errorHandler');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
@@ -21,7 +21,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(requestLogger);
 app.use(errorLogger);
-app.use(router);
+app.use(routes);
 app.use(errors());
 app.use(errorHandeler);
 
