@@ -7,6 +7,7 @@
 Также к серверу можно обратиться по http и по https, используя домен 
 https://api.lyudmila.students.nomoreparties.co
 https://www.api.lyudmila.students.nomoreparties.co
+
 ## Функционал прокта
 
 В проекте реализована обработка следующих запросов:
