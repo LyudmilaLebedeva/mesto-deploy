@@ -1,10 +1,9 @@
 require('dotenv').config();
 
-console.log(process.env.NODE_ENV);
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 
 const routes = require('./routes');
@@ -29,6 +28,7 @@ app.get('/crash-test', () => {
 });
 
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(requestLogger);
 app.use(errorLogger);
 app.use(routes);
