@@ -5,6 +5,7 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/NotFounError');
 const ConflictingRequestError = require('../errors/ConflictingRequestError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
+const BadReqestError = require('../errors/BadRequestError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 const MIN_PASSWORD_LENGTH = 8;
@@ -13,18 +14,22 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((user) => res.send({ id: user._id }))
-    .catch((err) => {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        next(new ConflictingRequestError('Пользователь с таким e-mail уже зарегистрирован'));
-      } else {
-        next(err);
-      }
-    });
+  if (!password.match(/^[/da-zA-Z]{8,}$/)) {
+    next(new BadReqestError('Пароль должен состоять из цифр и латинских букв'));
+  } else {
+    bcrypt.hash(password, 10)
+      .then((hash) => User.create({
+        name, about, avatar, email, password: hash,
+      }))
+      .then((user) => res.send({ id: user._id }))
+      .catch((err) => {
+        if (err.name === 'MongoError' && err.code === 11000) {
+          next(new ConflictingRequestError('Пользователь с таким e-mail уже зарегистрирован'));
+        } else {
+          next(err);
+        }
+      });
+  }
 };
 
 module.exports.getUsers = (req, res, next) => {
