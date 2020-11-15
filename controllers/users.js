@@ -2,83 +2,80 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const NotFoundError = require('../errors/NotFounError');
+const ConflictingRequestError = require('../errors/ConflictingRequestError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const BadReqestError = require('../errors/BadRequestError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 const MIN_PASSWORD_LENGTH = 8;
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  if (!password || password.length < MIN_PASSWORD_LENGTH) {
-    res.status(400).send({
-      message: `Не указан пароль или его длина меньше ${MIN_PASSWORD_LENGTH} символов`,
-    });
-    return;
+  if (!password.match(/^[/da-zA-Z]{8,}$/)) {
+    next(new BadReqestError('Пароль должен состоять из цифр и латинских букв'));
+  } else {
+    bcrypt.hash(password, 10)
+      .then((hash) => User.create({
+        name, about, avatar, email, password: hash,
+      }))
+      .then((user) => res.send({ id: user._id }))
+      .catch((err) => {
+        if (err.name === 'MongoError' && err.code === 11000) {
+          next(new ConflictingRequestError('Пользователь с таким e-mail уже зарегистрирован'));
+        } else {
+          next(err);
+        }
+      });
   }
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((user) => res.send({ id: user._id }))
-    .catch((err) => {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        res.status(409).send({ message: 'Пользователь с таким e-mail уже зарегистрирован' });
-      } else if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
-      } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
-      }
-    });
 };
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({ })
     .then((users) => res.send(users))
-    .catch((err) => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail()
-    .then((user) => res.send({ message: user }))
-    .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        res.status(404).send({ message: 'Объект не найден' });
-      } else if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Нет пользователя с таким id');
       }
-    });
+      res.send({ message: user });
+    })
+    .catch(next);
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   let userID;
-
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        throw new UnauthorizedError('Неправильные почта или пароль');
       }
       userID = user._id;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        throw new UnauthorizedError('Неправильные почта или пароль');
       }
       const token = jwt.sign(
         { _id: userID },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      return res.send({ token });
+      return res
+        .cookie('jwt', token, {
+          maxAge: 3600000,
+          httpOnly: true,
+          sameSite: true,
+        })
+        .end();
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
