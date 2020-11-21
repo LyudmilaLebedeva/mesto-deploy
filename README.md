@@ -2,14 +2,7 @@
 ## версия 0.0.1
 
 ## Описание
-Учебный проект, целью которого является навыка разработки бэкенд-приложения на Node.js с использованием Express.js и MongoDB, а также его размещение на удаленном сервере. В ходе проекта были решены следующие задачи:    
-- создание API.REST для работы с базой данных;
-- все роуты кроме регистрации и входа защищены авторизацией.
-Приложение размещено на удаленном сервере, к которому можно обратиться по публичному IP-адресу 178.154.230.154, либо по http и по https, используя доменное имя:
-- http://api.lyudmila.students.nomoreparties.co
-- https://api.lyudmila.students.nomoreparties.co
-- http://www.api.lyudmila.students.nomoreparties.co
-- https://www.api.lyudmila.students.nomoreparties.co
+Учебный проект, целью которого является навыка разработки бэкенд-приложения на Node.js с использованием Express.js и MongoDB, а также его размещение на удаленном сервере.
 
 ## Используемые технологии
 - JavaScript
@@ -26,6 +19,13 @@
 - POST /cards - создает в базе данных объект карточки;
 - GET /cards - возвращает json всех карточек из базы данных;
 - DELETE /cards/:cardId - удалаяет из базы данных карточку с переданным в параметрах id;
+
+## Размещение
+Приложение размещено на удаленном сервере, к которому можно обратиться по публичному IP-адресу 178.154.230.154, либо по http и по https, используя доменное имя:
+- http://api.lyudmila.students.nomoreparties.co
+- https://api.lyudmila.students.nomoreparties.co
+- http://www.api.lyudmila.students.nomoreparties.co
+- https://www.api.lyudmila.students.nomoreparties.co
 
 ## Как запустить локально
 Локально к серверу можно обратиться по адресу http://localhost:3000
